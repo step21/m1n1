@@ -63,6 +63,14 @@ struct tz_regs t603x_tz_regs = {
     .enable = 0x6e4,
 };
 
+struct tz_regs t6031_tz_regs = {
+    .count = 4,
+    .stride = 0x14,
+    .start = 0x69c,
+    .end = 0x6a0,
+    .enable = 0x6a4,
+};
+
 #define PLANE_CACHE_ENABLE 0x1c00
 #define PLANE_CACHE_STATUS 0x1c04
 
@@ -373,7 +381,7 @@ int mcc_init_t6031(int node, int *path)
         mcc_regs[i].cache_status_val = T6031_CACHE_STATUS_VAL;
         mcc_regs[i].cache_disable = 0;
 
-        mcc_regs[i].tz = &t603x_tz_regs;
+        mcc_regs[i].tz = &t6031_tz_regs;
     }
 
     printf("MCC: Initialized T6031 MCCs (%d instances, %d planes, %d channels)\n", mcc_count,
