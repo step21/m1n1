@@ -78,11 +78,22 @@ void init_t6030_everest(int rev)
     reg_set(SYS_IMP_APL_HID4, HID4_ENABLE_LFSR_STALL_LOAD_PIPE2_ISSUE);
 }
 
+static void init_h15_acntrdir(uint64_t val)
+{
+    msr(s3_1_c15_c1_5, 0x1); // ACNTRDIR_EL21 (sic)
+    if (in_el2()) {
+        // msr(s3_4_c15_c14_5, val); // ACNTRDIR_EL2
+        msr(s3_4_c15_c14_6, val); // ACNTRDIR_EL12
+    }
+    sysop("isb");
+}
+
 void init_t6031_everest(int rev)
 {
     UNUSED(rev);
-    msr(s3_1_c15_c1_5, 0x3uL);
-    msr(s3_4_c15_c14_6, 0x3uL);
+    init_h15_acntrdir(0x3ULL);
+    //msr(s3_1_c15_c1_5, 0x3uL);
+    //msr(s3_4_c15_c14_6, 0x3uL);
     init_common_everest();
     reg_set(SYS_IMP_APL_HID4, HID4_ENABLE_LFSR_STALL_LOAD_PIPE2_ISSUE);
 }
