@@ -66,7 +66,7 @@ static u32 pstate_reg_to_pstate(u64 val)
         case T6020:
         case T6021:
         case T6022:
-        case T6031:
+        //case T6031:
             return FIELD_GET(CLUSTER_PSTATE_DESIRED1, val);
         default:
             printf("cpufreq: Chip 0x%x is unsupported\n", chip_id);
@@ -77,6 +77,7 @@ static u32 pstate_reg_to_pstate(u64 val)
 static int set_pstate(const struct cluster_t *cluster, uint32_t pstate)
 {
     u64 val = read64(cluster->base + CLUSTER_PSTATE);
+    printf("cpufreq: cluster %s current pstate reg: 0x%lx\n", cluster->name, val);
 
     if (pstate_reg_to_pstate(val) != pstate) {
         switch (chip_id) {
@@ -104,20 +105,27 @@ static int set_pstate(const struct cluster_t *cluster, uint32_t pstate)
             case T6020:
             case T6021:
             case T6022:
-            case T6031:
+            //case T6031:
+                printf("cpufreq: %s: original reg=0x%lx, target pstate=%u\n", cluster->name, val, pstate);
                 val &= ~CLUSTER_PSTATE_DESIRED1;
+                printf("cpufreq: %s: cleared DESIRED1 field -> 0x%lx\n", cluster->name, val);
                 val |= CLUSTER_PSTATE_SET | FIELD_PREP(CLUSTER_PSTATE_DESIRED1, pstate);
+                printf("cpufreq: %s: setting pstate %u -> reg=0x%lx\n", cluster->name, pstate, val);
                 break;
             default:
                 printf("cpufreq: Chip 0x%x is unsupported\n", chip_id);
                 return -1;
         }
+        printf("cpufreq: writing 0x%lx to cluster %s\n", val, cluster->name);
         write64(cluster->base + CLUSTER_PSTATE, val);
+        printf("cpufreq: write complete, starting poll on cluster %s\n", cluster->name);
+        printf("cpufreq: polling for busy clear on cluster %s\n", cluster->name);
         if (poll64(cluster->base + CLUSTER_PSTATE, CLUSTER_PSTATE_BUSY, 0, CLUSTER_SWITCH_TIMEOUT) <
             0) {
             printf("cpufreq: Timed out waiting for cluster %s P-State switch\n", cluster->name);
             return -1;
         }
+        printf("cpufreq: cluster %s pstate set successfully\n", cluster->name);
     }
 
     return 0;
@@ -192,7 +200,7 @@ int cpufreq_init_cluster(const struct cluster_t *cluster, const struct feat_t *f
         case T6020:
         case T6021:
         case T6022:
-        case T6031:
+        //case T6031:
             /* Unknown */
             write64(cluster->base + 0x440f8, 1);
 
@@ -528,7 +536,7 @@ int cpufreq_init(void)
         return -1;
 
     /* Without this, CLUSTER_PSTATE_BUSY gets stuck */
-    if (chip_id == T8012 || chip_id == T8015)
+    if (chip_id == T8012 || chip_id == T8015) // || chip_id == T6031)
         pmgr_power_on(0, "SPMI");
 
     bool err = false;
