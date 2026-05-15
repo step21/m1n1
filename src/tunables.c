@@ -85,6 +85,7 @@ int tunables_apply_local_addr(const char *path, const char *prop, uintptr_t base
     const struct tunable_local *tunables = (const struct tunable_local *)info.tunable_raw;
     for (u32 i = 0; i < info.tunable_len; ++i) {
         const struct tunable_local *tunable = &tunables[i];
+	    printf("tunable %d offset %x mask %lx = %lx\n", i, tunable->offset, tunable->mask, tunable->value);
 
         switch (tunable->size) {
             case 1:
