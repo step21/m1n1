@@ -80,9 +80,14 @@ int pmgr_set_mode(uintptr_t addr, u8 target_mode)
     mask32(addr, PMGR_PS_TARGET, FIELD_PREP(PMGR_PS_TARGET, target_mode));
     if (poll32(addr, PMGR_PS_ACTUAL, FIELD_PREP(PMGR_PS_ACTUAL, target_mode), PMGR_POLL_TIMEOUT) <
         0) {
-        printf("pmgr: timeout while trying to set mode %x for device at 0x%lx: %x\n", target_mode,
-               addr, read32(addr));
-        return -1;
+    if (read32(addr) & (PMGR_WAS_CLKGATED | PMGR_WAS_PWRGATED)) {
+            mask32(addr, PMGR_WAS_CLKGATED | PMGR_WAS_PWRGATED | PMGR_PS_TARGET,
+                   FIELD_PREP(PMGR_PS_TARGET, target_mode));
+        } else {
+            printf("pmgr: timeout while trying to set mode %x for device at 0x%lx: %x\n",
+                   target_mode, addr, read32(addr));
+            return -1;
+        }
     }
 
     return 0;
