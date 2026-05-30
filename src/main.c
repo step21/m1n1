@@ -175,7 +175,7 @@ void m1n1_main(void)
 #endif
 #endif
 
-    cpufreq_fixup();
+    // cpufreq_fixup();
     sep_init();
 #endif
 

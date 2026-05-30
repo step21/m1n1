@@ -609,7 +609,7 @@ int proxy_process(ProxyRequest *request, ProxyReply *reply)
             break;
 
         case P_CPUFREQ_INIT:
-            reply->retval = cpufreq_init();
+            // reply->retval = cpufreq_init();
             break;
 
         default:
