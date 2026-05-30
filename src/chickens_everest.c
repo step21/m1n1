@@ -118,6 +118,11 @@ void init_t6030_everest(int rev)
 void init_t6031_everest(int rev)
 {
     UNUSED(rev);
+    //msr(s3_1_c15_c1_5, 0x3uL);
+    //msr(s3_4_c15_c14_6, 0x3uL);
+
+    //reg_mask(S3_4_C15_C12_1, 0x0, 0x1e);
     init_common_everest();
     reg_set(SYS_IMP_APL_HID4, HID4_ENABLE_LFSR_STALL_LOAD_PIPE2_ISSUE);
+
 }
