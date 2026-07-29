@@ -114,6 +114,7 @@ class HV(Reloadable):
         self.switching_context = False
         self.show_timestamps = False
         self.virtio_devs = {}
+        self.fixup_recount_transition = False
 
     def _reloadme(self):
         super()._reloadme()
@@ -719,6 +720,12 @@ class HV(Reloadable):
                     call=self.p.gl2_call
                 self.u.msr(enc2, value, call=call)
                 self.log(f"Pass: msr {name}, x{iss.Rt} = {value:x} (OK) ({sysreg_name(enc2)})")
+                if enc2 == HID18_EL1 and self.fixup_recount_transition:
+                    symbol = self.resolve_symbol("com.apple.kernel:_recount_transition")
+                    addr = self.p.hv_translate(symbol + 0x34)
+                    self.log(f"_recount_transition fixup at {addr:#x} (symbol: {symbol:#x})")
+                    self.p.write32(addr, 0xd503201f)
+                    self.fixup_recount_transition = False
 
         ctx.elr += 4
 
@@ -1905,6 +1912,8 @@ class HV(Reloadable):
         chip_id = self.u.adt["/chosen"].chip_id
         if chip_id in (0x8122, 0x6030, 0x6031, 0x6032, 0x6034):
             image = macho.prepare_image(load_hook_m3)
+            if self.resolve_symbol("com.apple.kernel:_recount_transition"):
+                self.fixup_recount_transition = True
         else:
             image = macho.prepare_image()
         self.load_raw(image, entryoffset=(macho.entry - macho.vmin), use_xnu_symbols=self.xnu_mode and symfile is not None, vmin=macho.vmin)
